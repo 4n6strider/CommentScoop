@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 '''
-CommentScoop is a python script that crawls through a web page (and any linked pages) source code (including javascript) and finds comments.
+CommentScoop is a python script that crawls through a web page (and any linked pages) source code (including CSS and javascript) and finds comments.
 
 Copyright (C) 2017  Haoxi Tan
 
@@ -26,14 +26,22 @@ import datetime, time
 import urllib
 import html
 import sys
+import re
 
 
 def parse_url(url):
-    '''This function parses the URL according to what it starts with.'''
+    '''
+    This function parses the URL according to what it starts with.
 
-    if url.startswith("http://")==0 and url.startswith("https://")==0:
-        url="http://"+url
+    '''
 
+    if url.startswith('//'):
+        url = "http:"+url
+
+    elif url.startswith("http")==0:
+        url = "http://"+url
+
+    
     return url
 
 
@@ -74,7 +82,7 @@ def get_scripts(soup):
             scripts.append(i.get('src'))
 
     for i in soup.find_all('link'):
-        print(i.get('rel'))
+        #print(i.get('rel'))
         if i.get('rel') == ['stylesheet']: #finds stylesheets
             scripts.append(i.get('href'))
 
@@ -95,6 +103,23 @@ def get_internal_links(soup):
 
     return set(links) #returns it as a set to organize and eliminate repeated results
 
+
+def find_script_comments(soup):
+    '''
+    loops through the JS and CSS files and finds their comments.
+    '''
+
+    #print(soup)
+    regex = re.compile('(\/\*[\s\S]*?\*\/)|(\/\/(.*)$)', re.MULTILINE) #adds multiline regex for matching comments
+    try:
+        for comment in regex.search(str(soup)).groups(): 
+            if comment!=None:
+                print(comment)
+
+    except AttributeError:
+        print("No comments found.")
+
+
 #main routine
 if __name__ == "__main__":
 
@@ -112,8 +137,9 @@ if __name__ == "__main__":
  ::: :::  ::::: ::  :::     ::   :::     ::    :: ::::   ::   ::     ::    :::: ::    ::: :::  ::::: ::  ::::: ::   ::       
  :: :: :   : :  :    :      :     :      :    : :: ::   ::    :      :     :: : :     :: :: :   : :  :    : :  :    :        
                                                                                                                              
-CommentScoop is a python script that crawls through a web page (and any linked pages) source code (including CSS and javascript) and finds comments.
-Haoxi Tan
+CommentScoop is a Python 3 script that crawls through a web page (and any linked pages) source code (including CSS and javascript) and finds comments.
+
+by Haoxi Tan
 h74n@protonmail.com
 
 ''')
@@ -134,7 +160,17 @@ h74n@protonmail.com
     soup = BeautifulSoup(response, 'html.parser')
     find_comments(soup)
 
-    for link in get_internal_links(soup):
+    for link in get_internal_links(soup): #finds comments in all internal links found
        find_comments(BeautifulSoup(get_response("%s/%s" % (url,link)), 'html.parser'))
 
-    print(get_scripts(soup))
+    #print(get_scripts(soup))
+
+    for link in get_scripts(soup):
+        #print("\n%s\n"%link)
+
+        if link.startswith('http') or link.startswith('//'):
+            find_script_comments(BeautifulSoup(get_response(parse_url(link)),'html.parser'))
+
+        else:
+            find_script_comments(BeautifulSoup(get_response(parse_url('%s/%s'%(url,link))),'html.parser'))
+
