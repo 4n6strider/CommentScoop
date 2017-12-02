@@ -90,7 +90,7 @@ def get_scripts(soup):
 
 def get_internal_links(soup):
     '''
-    Loops through all the <a> tags and get all its href attributes to find internal links (that don't start with 'http://')
+    Loops through all the <a> tags and get all its href attributes to find internal links (that don't start with 'http')
     '''
 
     links = []
@@ -98,7 +98,7 @@ def get_internal_links(soup):
         links.append(i.get('href'))
 
     for link in set(links):
-        if str(link).startswith('http://') or link==None:
+        if str(link).startswith('http') or link==None:
             links.remove(link)
 
     return set(links) #returns it as a set to organize and eliminate repeated results
