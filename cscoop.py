@@ -1,0 +1,99 @@
+#!/usr/bin/python3
+
+'''
+CommentScoop is a python script that crawls through a web page (and any linked pages) source code (including javascript) and finds comments.
+
+Copyright (C) 2017  Haoxi Tan
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>
+
+'''
+
+from bs4 import BeautifulSoup
+from bs4 import Comment
+import datetime, time
+import urllib
+import html
+import sys
+
+
+def parse_url(url):
+    '''This function parses the URL according to what it starts with.'''
+
+    if url.startswith("http://")==0 and url.startswith("https://")==0:
+        url="http://"+url
+
+    return url
+
+
+def get_response(url):
+    '''
+    Use urllib to get the response of the url requested
+    '''
+    try:
+        opener = urllib.request.build_opener()
+        urllib.request.install_opener(opener)
+        #set useragent to mozilla
+        opener.addheaders = [('User-Agent', 'Mozilla/5.0')]
+        print("\nurl: %s\n" % url)
+        return opener.open(url)
+
+    except urllib.error.URLError:
+            print("Error getting source code at: ",url)
+
+
+
+
+def find_comments(soup):
+    '''
+    Utilizes the beatifulsoup library to find all HTML comments.
+    '''
+    for comment in soup.find_all(string=lambda text:isinstance(text,Comment)):
+        print('<!--'+comment+'-->')
+
+def find_internal_links(soup):
+    '''
+    Loops through all the <a> tags and get all its href attributes to find internal links (that don't start with 'http://')
+    '''
+
+    links = []
+    for i in soup.find_all('a'):
+        links.append(i.get('href'))
+
+    for link in set(links):
+        if str(link).startswith('http://') or link==None:
+            links.remove(link)
+
+    return set(links) #returns it as a set to organize and eliminate repeated results
+
+#main routine
+if __name__ == "__main__":
+
+    if len(sys.argv) < 2:
+        print("usage: ./cscoop.py <url>")
+        exit(1)
+
+    url=parse_url(sys.argv[1])
+    print("target link:%s\n"%url)
+
+    #get the content of the URL
+    response = get_response(url)
+
+    
+    #start parsing it with BeautifulSoup
+    soup = BeautifulSoup(response, 'html.parser')
+    find_comments(soup)
+
+    for link in find_internal_links(soup):
+       find_comments(BeautifulSoup(get_response("%s/%s" % (url,link)), 'html.parser'))
