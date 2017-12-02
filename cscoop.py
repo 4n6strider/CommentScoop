@@ -161,7 +161,11 @@ h74n@protonmail.com
     find_comments(soup)
 
     for link in get_internal_links(soup): #finds comments in all internal links found
-       find_comments(BeautifulSoup(get_response("%s/%s" % (url,link)), 'html.parser'))
+        try:
+            find_comments(BeautifulSoup(get_response("%s/%s" % (url,link)), 'html.parser'))
+        except TypeError:
+            pass
+
 
     #print(get_scripts(soup))
 
