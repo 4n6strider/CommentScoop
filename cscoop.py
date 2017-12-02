@@ -62,7 +62,25 @@ def find_comments(soup):
     for comment in soup.find_all(string=lambda text:isinstance(text,Comment)):
         print('<!--'+comment+'-->')
 
-def find_internal_links(soup):
+
+def get_scripts(soup):
+    '''
+    Finds JS and CSS scrips attached to the website and return them as a set
+    '''
+
+    scripts = []
+    for i in soup.find_all('script'):
+        if (i.get('src') != None):
+            scripts.append(i.get('src'))
+
+    for i in soup.find_all('link'):
+        print(i.get('rel'))
+        if i.get('rel') == ['stylesheet']: #finds stylesheets
+            scripts.append(i.get('href'))
+
+    return(set(scripts))
+
+def get_internal_links(soup):
     '''
     Loops through all the <a> tags and get all its href attributes to find internal links (that don't start with 'http://')
     '''
@@ -80,12 +98,33 @@ def find_internal_links(soup):
 #main routine
 if __name__ == "__main__":
 
+    print('''
+
+
+ @@@@@@@   @@@@@@   @@@@@@@@@@   @@@@@@@@@@   @@@@@@@@  @@@  @@@  @@@@@@@   @@@@@@    @@@@@@@   @@@@@@    @@@@@@   @@@@@@@   
+@@@@@@@@  @@@@@@@@  @@@@@@@@@@@  @@@@@@@@@@@  @@@@@@@@  @@@@ @@@  @@@@@@@  @@@@@@@   @@@@@@@@  @@@@@@@@  @@@@@@@@  @@@@@@@@  
+!@@       @@!  @@@  @@! @@! @@!  @@! @@! @@!  @@!       @@!@!@@@    @@!    !@@       !@@       @@!  @@@  @@!  @@@  @@!  @@@  
+!@!       !@!  @!@  !@! !@! !@!  !@! !@! !@!  !@!       !@!!@!@!    !@!    !@!       !@!       !@!  @!@  !@!  @!@  !@!  @!@  
+!@!       @!@  !@!  @!! !!@ @!@  @!! !!@ @!@  @!!!:!    @!@ !!@!    @!!    !!@@!!    !@!       @!@  !@!  @!@  !@!  @!@@!@!   
+!!!       !@!  !!!  !@!   ! !@!  !@!   ! !@!  !!!!!:    !@!  !!!    !!!     !!@!!!   !!!       !@!  !!!  !@!  !!!  !!@!!!    
+:!!       !!:  !!!  !!:     !!:  !!:     !!:  !!:       !!:  !!!    !!:         !:!  :!!       !!:  !!!  !!:  !!!  !!:       
+:!:       :!:  !:!  :!:     :!:  :!:     :!:  :!:       :!:  !:!    :!:        !:!   :!:       :!:  !:!  :!:  !:!  :!:       
+ ::: :::  ::::: ::  :::     ::   :::     ::    :: ::::   ::   ::     ::    :::: ::    ::: :::  ::::: ::  ::::: ::   ::       
+ :: :: :   : :  :    :      :     :      :    : :: ::   ::    :      :     :: : :     :: :: :   : :  :    : :  :    :        
+                                                                                                                             
+CommentScoop is a python script that crawls through a web page (and any linked pages) source code (including CSS and javascript) and finds comments.
+Haoxi Tan
+h74n@protonmail.com
+
+''')
+
+
     if len(sys.argv) < 2:
         print("usage: ./cscoop.py <url>")
         exit(1)
 
     url=parse_url(sys.argv[1])
-    print("target link:%s\n"%url)
+    print("target link: %s\n"%url)
 
     #get the content of the URL
     response = get_response(url)
@@ -95,5 +134,7 @@ if __name__ == "__main__":
     soup = BeautifulSoup(response, 'html.parser')
     find_comments(soup)
 
-    for link in find_internal_links(soup):
+    for link in get_internal_links(soup):
        find_comments(BeautifulSoup(get_response("%s/%s" % (url,link)), 'html.parser'))
+
+    print(get_scripts(soup))

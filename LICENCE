@@ -1,4 +1,4 @@
-CommentScoop is a python script that crawls through a web page (and any linked pages) source code (including javascript) and finds comments.
+CommentScoop is a Python 3 script that crawls through a web page (and any linked pages) source code (including CSS and javascript) and finds comments.
 
 Copyright (C) 2017  Haoxi Tan
 
