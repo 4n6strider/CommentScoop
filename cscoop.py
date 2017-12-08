@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 from bs4 import BeautifulSoup
 from bs4 import Comment
 import datetime, time
-import urllib
+import urllib.request
 import html
 import sys
 import re
